@@ -105,6 +105,42 @@ Aplikasi dilengkapi dengan 3 akun demo:
 - **Manager**: manager@example.com / manager123
 - **Member**: member@example.com / member123
 
+## 🔒 Role-Based Access Control (RBAC)
+
+Aplikasi ini menggunakan sistem RBAC lengkap dengan 3 level akses:
+
+### 👑 Admin (Administrator)
+- **Akses**: Full access ke semua 10 modul
+- **Hak**: Create, Edit, Delete semua data
+- **Data**: Melihat statistik seluruh perusahaan (48 proyek, 456 tasks, 2456 jam, 24 anggota)
+- **Fitur Khusus**: 
+  - Manage user roles
+  - View audit logs
+  - System settings
+  - Delete projects
+
+### 👔 Manager (Project Manager)
+- **Akses**: 10 modul dengan pembatasan
+- **Hak**: Create proyek/tasks, Edit data tim mereka, Approve time entries
+- **Data**: Melihat statistik tim yang dikelola (12 proyek, 145 tasks, 640 jam, 8 anggota)
+- **Fitur Khusus**:
+  - Create & manage projects
+  - Invite team members
+  - View team reports
+  - Approve time tracking
+
+### 👤 Member (Team Member)
+- **Akses**: 8 modul (tidak ada Projects & Reports)
+- **Hak**: Read-only untuk proyek, Update status tugas sendiri
+- **Data**: Melihat data pribadi (3 proyek, 28 tasks, 186 jam)
+- **Fitur**:
+  - View assigned tasks
+  - Update task status
+  - Log time entries
+  - Upload documents
+
+**Dokumentasi Lengkap**: Lihat `ROLE_PERMISSIONS.md` untuk detail permission matrix
+
 ## 🛠️ Integrasi dengan Laravel Backend
 
 Aplikasi ini saat ini menggunakan **mock data** untuk demonstrasi. Untuk mengintegrasikan dengan backend Laravel Anda:

@@ -19,15 +19,24 @@ import {
   TrendingUp,
   Clock,
   Target,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { hasPermission } from '../utils/permissions';
 
 interface ProjectsProps {
   currentUser: any;
 }
 
 export default function Projects({ currentUser }: ProjectsProps) {
+  // Permission checks
+  const canCreateProject = hasPermission(currentUser.role, 'create_project');
+  const canEditAllProjects = hasPermission(currentUser.role, 'edit_all_projects');
+  const canDeleteProject = hasPermission(currentUser.role, 'delete_project');
+  const canViewAllProjects = hasPermission(currentUser.role, 'view_all_projects');
+  const canArchiveProject = hasPermission(currentUser.role, 'archive_project');
+
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -199,103 +208,109 @@ export default function Projects({ currentUser }: ProjectsProps) {
             <FolderKanban className="h-7 w-7 text-blue-600" />
             Manajemen Proyek
           </h2>
-          <p className="text-gray-600 mt-1">Kelola semua proyek Anda di satu tempat</p>
+          <p className="text-gray-600 mt-1">
+            {canViewAllProjects 
+              ? 'Kelola semua proyek Anda di satu tempat' 
+              : 'Proyek yang ditugaskan kepada Anda'}
+          </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              onClick={() => {
-                setEditingProject(null);
-                setFormData({ name: '', description: '', status: 'new', priority: 'medium', deadline: '' });
-              }}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Proyek Baru
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-blue-600" />
-                {editingProject ? 'Edit Proyek' : 'Buat Proyek Baru'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingProject ? 'Edit detail proyek Anda' : 'Buat proyek baru'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nama Proyek</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Masukkan nama proyek"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Deskripsi</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Deskripsi proyek"
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        {canCreateProject && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                onClick={() => {
+                  setEditingProject(null);
+                  setFormData({ name: '', description: '', status: 'new', priority: 'medium', deadline: '' });
+                }}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Proyek Baru
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  {editingProject ? 'Edit Proyek' : 'Buat Proyek Baru'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingProject ? 'Edit detail proyek Anda' : 'Buat proyek baru'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">Baru</SelectItem>
-                      <SelectItem value="ongoing">Berjalan</SelectItem>
-                      <SelectItem value="completed">Selesai</SelectItem>
-                      <SelectItem value="paused">Ditunda</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="name">Nama Proyek</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Masukkan nama proyek"
+                    className="mt-1"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="priority">Prioritas</Label>
-                  <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Rendah</SelectItem>
-                      <SelectItem value="medium">Sedang</SelectItem>
-                      <SelectItem value="high">Tinggi</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="description">Deskripsi</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Deskripsi proyek"
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Baru</SelectItem>
+                        <SelectItem value="ongoing">Berjalan</SelectItem>
+                        <SelectItem value="completed">Selesai</SelectItem>
+                        <SelectItem value="paused">Ditunda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="priority">Prioritas</Label>
+                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Rendah</SelectItem>
+                        <SelectItem value="medium">Sedang</SelectItem>
+                        <SelectItem value="high">Tinggi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="deadline">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Batal
+                  </Button>
+                  <Button onClick={handleCreateProject} className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                    {editingProject ? 'Update' : 'Buat Proyek'}
+                  </Button>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="deadline">Deadline</Label>
-                <Input
-                  id="deadline"
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button onClick={handleCreateProject} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                  {editingProject ? 'Update' : 'Buat Proyek'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Stats */}
@@ -373,26 +388,32 @@ export default function Projects({ currentUser }: ProjectsProps) {
                     </div>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(project)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleDelete(project.id)}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Hapus
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {(canEditAllProjects || canDeleteProject) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canEditAllProjects && (
+                        <DropdownMenuItem onClick={() => handleEdit(project)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {canDeleteProject && (
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(project.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Hapus
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">

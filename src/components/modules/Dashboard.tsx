@@ -12,22 +12,44 @@ import {
   ArrowUpRight,
   Calendar,
   Target,
-  Zap
+  Zap,
+  Award,
+  Activity
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { hasPermission } from '../utils/permissions';
 
 interface DashboardProps {
   currentUser: any;
 }
 
 export default function Dashboard({ currentUser }: DashboardProps) {
-  const [stats, setStats] = useState({
+  // Permission checks
+  const canViewAllStats = hasPermission(currentUser.role, 'view_all_stats');
+  const canViewTeamStats = hasPermission(currentUser.role, 'view_team_stats');
+  
+  // Stats berbeda per role
+  const [stats, setStats] = useState(canViewAllStats ? {
+    totalProjects: 48,
+    activeProjects: 24,
+    completedTasks: 456,
+    pendingTasks: 112,
+    teamMembers: 24,
+    hoursTracked: 2456
+  } : canViewTeamStats ? {
     totalProjects: 12,
     activeProjects: 7,
     completedTasks: 145,
     pendingTasks: 38,
-    teamMembers: 24,
-    hoursTracked: 342
+    teamMembers: 8,
+    hoursTracked: 640
+  } : {
+    totalProjects: 3,
+    activeProjects: 2,
+    completedTasks: 28,
+    pendingTasks: 5,
+    teamMembers: 1,
+    hoursTracked: 186
   });
 
   const projectData = [

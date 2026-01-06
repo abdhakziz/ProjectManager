@@ -13,7 +13,9 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  Settings
 } from 'lucide-react';
 import Dashboard from './modules/Dashboard';
 import Projects from './modules/Projects';
@@ -23,6 +25,8 @@ import Team from './modules/Team';
 import TimeTracking from './modules/TimeTracking';
 import Documents from './modules/Documents';
 import Notifications from './modules/Notifications';
+import Reports from './modules/Reports';
+import { canAccessModule, ROLE_NAMES } from './utils/permissions';
 
 interface MainLayoutProps {
   currentUser: any;
@@ -34,16 +38,24 @@ export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationCount] = useState(3);
 
-  const modules = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-600 bg-blue-50' },
-    { id: 'projects', name: 'Proyek', icon: FolderKanban, color: 'text-purple-600 bg-purple-50' },
-    { id: 'tasks', name: 'Tugas', icon: CheckSquare, color: 'text-green-600 bg-green-50' },
-    { id: 'calendar', name: 'Kalender', icon: Calendar, color: 'text-orange-600 bg-orange-50' },
-    { id: 'team', name: 'Tim', icon: Users, color: 'text-pink-600 bg-pink-50' },
-    { id: 'timetracking', name: 'Time Tracking', icon: Clock, color: 'text-indigo-600 bg-indigo-50' },
-    { id: 'documents', name: 'Dokumen', icon: FileText, color: 'text-cyan-600 bg-cyan-50' },
-    { id: 'notifications', name: 'Notifikasi', icon: Bell, color: 'text-red-600 bg-red-50' },
+  // Definisi semua modul dengan permission-nya
+  const allModules = [
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-600 bg-blue-50', permission: 'dashboard' },
+    { id: 'projects', name: 'Proyek', icon: FolderKanban, color: 'text-purple-600 bg-purple-50', permission: 'projects' },
+    { id: 'tasks', name: 'Tugas', icon: CheckSquare, color: 'text-green-600 bg-green-50', permission: 'tasks' },
+    { id: 'calendar', name: 'Kalender', icon: Calendar, color: 'text-orange-600 bg-orange-50', permission: 'calendar' },
+    { id: 'team', name: 'Tim', icon: Users, color: 'text-pink-600 bg-pink-50', permission: 'team' },
+    { id: 'reports', name: 'Laporan', icon: BarChart3, color: 'text-teal-600 bg-teal-50', permission: 'reports' },
+    { id: 'timetracking', name: 'Time Tracking', icon: Clock, color: 'text-indigo-600 bg-indigo-50', permission: 'time-tracking' },
+    { id: 'documents', name: 'Dokumen', icon: FileText, color: 'text-cyan-600 bg-cyan-50', permission: 'documents' },
+    { id: 'notifications', name: 'Notifikasi', icon: Bell, color: 'text-red-600 bg-red-50', permission: 'notifications' },
+    { id: 'settings', name: 'Pengaturan', icon: Settings, color: 'text-gray-600 bg-gray-50', permission: 'settings' },
   ];
+
+  // Filter modules berdasarkan role
+  const modules = allModules.filter(module => 
+    canAccessModule(currentUser.role, module.permission)
+  );
 
   const renderModule = () => {
     switch (activeModule) {
@@ -57,6 +69,8 @@ export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
         return <CalendarView currentUser={currentUser} />;
       case 'team':
         return <Team currentUser={currentUser} />;
+      case 'reports':
+        return <Reports currentUser={currentUser} />;
       case 'timetracking':
         return <TimeTracking currentUser={currentUser} />;
       case 'documents':
