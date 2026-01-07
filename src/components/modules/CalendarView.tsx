@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Calendar } from '../ui/calendar';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
 
 interface CalendarViewProps {
   currentUser: any;
@@ -11,17 +10,16 @@ interface CalendarViewProps {
 }
 
 export default function CalendarView({ currentUser, selectedProject }: CalendarViewProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Mock events and deadlines
   const events = [
     { 
       id: 1, 
-      title: 'Design homepage mockup', 
+      title: 'Design homepage mockup selesai', 
       project: 'Website Redesign',
       date: '2026-01-08', 
-      type: 'deadline',
+      type: 'milestone',
       priority: 'high'
     },
     { 
@@ -34,18 +32,18 @@ export default function CalendarView({ currentUser, selectedProject }: CalendarV
     },
     { 
       id: 3, 
-      title: 'Complete API integration', 
+      title: 'API integration completed', 
       project: 'Mobile App',
       date: '2026-01-09', 
-      type: 'deadline',
+      type: 'milestone',
       priority: 'high'
     },
     { 
       id: 4, 
-      title: 'Marketing materials review', 
+      title: 'Review marketing materials', 
       project: 'Marketing Campaign',
       date: '2026-01-10', 
-      type: 'deadline',
+      type: 'task',
       priority: 'medium'
     },
     { 
@@ -71,6 +69,14 @@ export default function CalendarView({ currentUser, selectedProject }: CalendarV
       date: '2026-01-20', 
       type: 'task',
       priority: 'medium'
+    },
+    { 
+      id: 8, 
+      title: 'Product launch', 
+      project: 'Website Redesign',
+      date: '2026-01-25', 
+      type: 'milestone',
+      priority: 'high'
     }
   ];
 
@@ -79,62 +85,58 @@ export default function CalendarView({ currentUser, selectedProject }: CalendarV
     return events.filter(event => event.date === dateStr);
   };
 
-  const getEventsForSelectedDate = () => {
-    if (!date) return [];
-    return getEventsForDate(date);
-  };
-
-  const getMonthEvents = () => {
-    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-    
-    return events.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate >= monthStart && eventDate <= monthEnd;
-    });
-  };
-
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'deadline':
-        return 'bg-red-100 text-red-800';
+      case 'milestone':
+        return 'bg-red-500';
       case 'meeting':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500';
       case 'task':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500';
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'deadline':
-        return 'Deadline';
-      case 'meeting':
-        return 'Meeting';
-      case 'task':
-        return 'Tugas';
-      default:
-        return type;
-    }
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'border-l-4 border-red-500';
-      case 'medium':
-        return 'border-l-4 border-orange-500';
-      case 'low':
-        return 'border-l-4 border-blue-500';
-      default:
-        return 'border-l-4 border-gray-500';
-    }
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  const monthEvents = getMonthEvents();
-  const selectedDateEvents = getEventsForSelectedDate();
+  const getDaysInMonth = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    return days;
+  };
+
+  const isToday = (date: Date | null) => {
+    if (!date) return false;
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const days = getDaysInMonth();
+  const monthYear = currentMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
   // Create Gantt chart data for timeline view
   const ganttData = [
@@ -168,80 +170,92 @@ export default function CalendarView({ currentUser, selectedProject }: CalendarV
         <p className="text-gray-500 mt-1">Lihat jadwal, deadline, dan timeline proyek</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Kalender
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Events for selected date */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {date ? date.toLocaleDateString('id-ID', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              }) : 'Pilih Tanggal'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedDateEvents.length > 0 ? (
-              <div className="space-y-3">
-                {selectedDateEvents.map(event => (
-                  <div key={event.id} className={`p-3 bg-gray-50 rounded-lg ${getPriorityColor(event.priority)}`}>
-                    <Badge className={getTypeColor(event.type)} variant="secondary">
-                      {getTypeLabel(event.type)}
-                    </Badge>
-                    <h4 className="font-medium mt-2">{event.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{event.project}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                Tidak ada event pada tanggal ini
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Upcoming Events */}
+      {/* Large Calendar with Events */}
       <Card>
         <CardHeader>
-          <CardTitle>Event Bulan Ini ({monthEvents.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              {monthYear}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={previousMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
+                Hari Ini
+              </Button>
+              <Button variant="outline" size="icon" onClick={nextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {monthEvents.map(event => (
-              <div key={event.id} className={`p-4 bg-gray-50 rounded-lg ${getPriorityColor(event.priority)}`}>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge className={getTypeColor(event.type)} variant="secondary">
-                    {getTypeLabel(event.type)}
-                  </Badge>
-                  <span className="text-sm text-gray-600">
-                    {new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                  </span>
-                </div>
-                <h4 className="font-medium">{event.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{event.project}</p>
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-2">
+            {/* Day headers */}
+            {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((day, index) => (
+              <div key={index} className="text-center font-semibold text-sm text-gray-600 py-2 border-b">
+                {day}
               </div>
             ))}
+            
+            {/* Calendar days */}
+            {days.map((date, index) => {
+              const dayEvents = date ? getEventsForDate(date) : [];
+              const isTodayDate = isToday(date);
+              
+              return (
+                <div
+                  key={index}
+                  className={`min-h-[120px] border rounded-lg p-2 ${
+                    date ? 'bg-white hover:bg-gray-50 cursor-pointer transition-colors' : 'bg-gray-50'
+                  } ${isTodayDate ? 'border-blue-500 border-2 bg-blue-50' : 'border-gray-200'}`}
+                >
+                  {date && (
+                    <>
+                      <div className={`text-sm font-semibold mb-1 ${isTodayDate ? 'text-blue-600' : 'text-gray-900'}`}>
+                        {date.getDate()}
+                      </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <div
+                            key={event.id}
+                            className={`${getTypeColor(event.type)} text-white text-xs rounded px-2 py-1 truncate hover:opacity-90 transition-opacity`}
+                            title={`${event.title} - ${event.project}`}
+                          >
+                            {event.title}
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="text-xs text-gray-500 pl-2">
+                            +{dayEvents.length - 3} lainnya
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Legend */}
+          <div className="mt-6 flex flex-wrap items-center gap-4 pt-4 border-t">
+            <span className="text-sm font-semibold text-gray-700">Keterangan:</span>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded"></div>
+              <span className="text-sm text-gray-600">Milestone</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded"></div>
+              <span className="text-sm text-gray-600">Meeting</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-500 rounded"></div>
+              <span className="text-sm text-gray-600">Tugas</span>
+            </div>
           </div>
         </CardContent>
       </Card>
