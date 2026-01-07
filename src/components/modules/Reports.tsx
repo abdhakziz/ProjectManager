@@ -7,9 +7,10 @@ import { hasPermission } from '../utils/permissions';
 
 interface ReportsProps {
   currentUser: any;
+  selectedProject?: any;
 }
 
-export default function Reports({ currentUser }: ReportsProps) {
+export default function Reports({ currentUser, selectedProject }: ReportsProps) {
   const [reportType, setReportType] = useState<'overview' | 'projects' | 'team' | 'time'>('overview');
   const [dateRange, setDateRange] = useState('30days');
 

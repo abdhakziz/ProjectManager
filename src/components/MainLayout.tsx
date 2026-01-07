@@ -11,11 +11,11 @@ import {
   FileText, 
   Bell, 
   LogOut,
-  Menu,
-  X,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
   BarChart3,
-  Settings
+  Plus
 } from 'lucide-react';
 import Dashboard from './modules/Dashboard';
 import Projects from './modules/Projects';
@@ -26,7 +26,7 @@ import TimeTracking from './modules/TimeTracking';
 import Documents from './modules/Documents';
 import Notifications from './modules/Notifications';
 import Reports from './modules/Reports';
-import { canAccessModule, ROLE_NAMES } from './utils/permissions';
+import { mockProjects } from '../App';
 
 interface MainLayoutProps {
   currentUser: any;
@@ -34,66 +34,96 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const [activeView, setActiveView] = useState('dashboard');
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationCount] = useState(3);
+  const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] = useState(false);
+  const [newProjectData, setNewProjectData] = useState({
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    color: 'bg-blue-500'
+  });
 
-  // Definisi semua modul dengan permission-nya
-  const allModules = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-600 bg-blue-50', permission: 'dashboard' },
-    { id: 'projects', name: 'Proyek', icon: FolderKanban, color: 'text-purple-600 bg-purple-50', permission: 'projects' },
-    { id: 'tasks', name: 'Tugas', icon: CheckSquare, color: 'text-green-600 bg-green-50', permission: 'tasks' },
-    { id: 'calendar', name: 'Kalender', icon: Calendar, color: 'text-orange-600 bg-orange-50', permission: 'calendar' },
-    { id: 'team', name: 'Tim', icon: Users, color: 'text-pink-600 bg-pink-50', permission: 'team' },
-    { id: 'reports', name: 'Laporan', icon: BarChart3, color: 'text-teal-600 bg-teal-50', permission: 'reports' },
-    { id: 'timetracking', name: 'Time Tracking', icon: Clock, color: 'text-indigo-600 bg-indigo-50', permission: 'time-tracking' },
-    { id: 'documents', name: 'Dokumen', icon: FileText, color: 'text-cyan-600 bg-cyan-50', permission: 'documents' },
-    { id: 'notifications', name: 'Notifikasi', icon: Bell, color: 'text-red-600 bg-red-50', permission: 'notifications' },
-    { id: 'settings', name: 'Pengaturan', icon: Settings, color: 'text-gray-600 bg-gray-50', permission: 'settings' },
+  // Project sub-menu items
+  const projectModules = [
+    { id: 'overview', name: 'Overview Proyek', icon: FolderKanban, color: 'text-purple-600 bg-purple-50' },
+    { id: 'tasks', name: 'Tugas', icon: CheckSquare, color: 'text-green-600 bg-green-50' },
+    { id: 'calendar', name: 'Kalender', icon: Calendar, color: 'text-orange-600 bg-orange-50' },
+    { id: 'team', name: 'Tim', icon: Users, color: 'text-pink-600 bg-pink-50' },
+    { id: 'reports', name: 'Laporan', icon: BarChart3, color: 'text-teal-600 bg-teal-50' },
+    { id: 'timetracking', name: 'Time Tracking', icon: Clock, color: 'text-indigo-600 bg-indigo-50' },
+    { id: 'documents', name: 'Dokumen', icon: FileText, color: 'text-cyan-600 bg-cyan-50' },
   ];
 
-  // Filter modules berdasarkan role
-  const modules = allModules.filter(module => 
-    canAccessModule(currentUser.role, module.permission)
-  );
+  const handleProjectClick = (project: any) => {
+    if (expandedProject === project.id) {
+      // Collapse if already expanded
+      setExpandedProject(null);
+      setSelectedProject(null);
+      setActiveView('dashboard');
+    } else {
+      // Expand and select project
+      setExpandedProject(project.id);
+      setSelectedProject(project);
+      setActiveView('overview');
+    }
+  };
+
+  const handleModuleClick = (moduleId: string) => {
+    setActiveView(moduleId);
+  };
 
   const renderModule = () => {
-    switch (activeModule) {
-      case 'dashboard':
-        return <Dashboard currentUser={currentUser} />;
-      case 'projects':
-        return <Projects currentUser={currentUser} />;
-      case 'tasks':
-        return <Tasks currentUser={currentUser} />;
-      case 'calendar':
-        return <CalendarView currentUser={currentUser} />;
-      case 'team':
-        return <Team currentUser={currentUser} />;
-      case 'reports':
-        return <Reports currentUser={currentUser} />;
-      case 'timetracking':
-        return <TimeTracking currentUser={currentUser} />;
-      case 'documents':
-        return <Documents currentUser={currentUser} />;
-      case 'notifications':
-        return <Notifications currentUser={currentUser} />;
-      default:
-        return <Dashboard currentUser={currentUser} />;
+    // If no project selected, show dashboard
+    if (!selectedProject && activeView === 'dashboard') {
+      return <Dashboard currentUser={currentUser} />;
     }
+
+    // If project selected, show project-specific modules
+    if (selectedProject) {
+      switch (activeView) {
+        case 'overview':
+          return <Projects currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'tasks':
+          return <Tasks currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'calendar':
+          return <CalendarView currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'team':
+          return <Team currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'reports':
+          return <Reports currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'timetracking':
+          return <TimeTracking currentUser={currentUser} selectedProject={selectedProject} />;
+        case 'documents':
+          return <Documents currentUser={currentUser} selectedProject={selectedProject} />;
+        default:
+          return <Projects currentUser={currentUser} selectedProject={selectedProject} />;
+      }
+    }
+
+    // Fallback to dashboard
+    return <Dashboard currentUser={currentUser} />;
   };
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  const getRoleBadge = (role: string) => {
-    const colors = {
-      admin: 'bg-purple-100 text-purple-700',
-      manager: 'bg-blue-100 text-blue-700',
-      member: 'bg-green-100 text-green-700'
-    };
-    return colors[role as keyof typeof colors] || colors.member;
+  const getActiveModuleName = () => {
+    if (activeView === 'dashboard') return 'Dashboard';
+    if (selectedProject) {
+      const module = projectModules.find(m => m.id === activeView);
+      return module ? `${selectedProject.name} - ${module.name}` : selectedProject.name;
+    }
+    return 'Dashboard';
   };
+
+  // Get recent active projects (max 5)
+  const recentProjects = mockProjects.filter(p => p.status === 'active').slice(0, 5);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -115,55 +145,94 @@ export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {modules.map((module) => {
-            const Icon = module.icon;
-            const isActive = activeModule === module.id;
-            return (
-              <button
-                key={module.id}
-                onClick={() => setActiveModule(module.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg transition-all ${
-                  isActive ? 'bg-white/20' : module.color
-                }`}>
-                  <Icon className="h-5 w-5" />
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {/* Dashboard */}
+          <button
+            onClick={() => {
+              setActiveView('dashboard');
+              setSelectedProject(null);
+              setExpandedProject(null);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+              activeView === 'dashboard' && !selectedProject
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <div className={`p-2 rounded-lg transition-all ${
+              activeView === 'dashboard' && !selectedProject ? 'bg-white/20' : 'text-blue-600 bg-blue-50'
+            }`}>
+              <LayoutDashboard className="h-5 w-5" />
+            </div>
+            <span className="font-medium flex-1 text-left">Dashboard</span>
+            {activeView === 'dashboard' && !selectedProject && (
+              <ChevronRight className="h-4 w-4 opacity-60" />
+            )}
+          </button>
+
+          {/* Recent Projects Section */}
+          <div className="pt-4">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent Projects</h3>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-blue-50">
+                <Plus className="h-4 w-4 text-blue-600" />
+              </Button>
+            </div>
+            
+            <div className="space-y-1">
+              {recentProjects.map((project) => (
+                <div key={project.id}>
+                  {/* Project Item */}
+                  <button
+                    onClick={() => handleProjectClick(project)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                      expandedProject === project.id
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${project.color}`}></div>
+                    <span className="font-medium flex-1 text-left text-sm truncate">{project.name}</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${
+                      expandedProject === project.id ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+
+                  {/* Project Sub-menu */}
+                  {expandedProject === project.id && (
+                    <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-2">
+                      {projectModules.map((module) => {
+                        const Icon = module.icon;
+                        const isActive = activeView === module.id && selectedProject?.id === project.id;
+                        return (
+                          <button
+                            key={module.id}
+                            onClick={() => handleModuleClick(module.id)}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
+                              isActive
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-md ${
+                              isActive ? 'bg-white/20' : module.color
+                            }`}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <span className="flex-1 text-left">{module.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <span className="font-medium flex-1 text-left">{module.name}</span>
-                {isActive && (
-                  <ChevronRight className="h-4 w-4 opacity-60" />
-                )}
-                {module.id === 'notifications' && notificationCount > 0 && (
-                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </nav>
 
         {/* User Profile */}
         <div className="p-4 border-t border-gray-100 bg-gradient-to-br from-gray-50 to-white">
-          <div className="flex items-center gap-3 mb-3 p-3 bg-white rounded-xl shadow-sm">
-            <Avatar className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/20">
-              <AvatarFallback className="text-white font-semibold">
-                {getInitials(currentUser.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-gray-900 truncate">{currentUser.name}</p>
-              <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
-              <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getRoleBadge(currentUser.role)}`}>
-                {currentUser.role}
-              </span>
-            </div>
-          </div>
           <Button
             onClick={onLogout}
             variant="outline"
@@ -188,22 +257,22 @@ export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="hover:bg-gray-100"
               >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
               </Button>
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  {modules.find(m => m.id === activeModule)?.name}
+                  {getActiveModuleName()}
                 </h2>
                 <p className="text-sm text-gray-500">
                   {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              {/* Notifications */}
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setActiveModule('notifications')}
                 className="relative hover:bg-gray-100"
               >
                 <Bell className="h-5 w-5" />
@@ -213,11 +282,19 @@ export default function MainLayout({ currentUser, onLogout }: MainLayoutProps) {
                   </span>
                 )}
               </Button>
-              <Avatar className="h-9 w-9 bg-gradient-to-br from-blue-500 to-indigo-500 cursor-pointer shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
-                <AvatarFallback className="text-white font-semibold text-sm">
-                  {getInitials(currentUser.name)}
-                </AvatarFallback>
-              </Avatar>
+
+              {/* User Profile */}
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-sm border border-gray-100">
+                <Avatar className="h-10 w-10 bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/20">
+                  <AvatarFallback className="text-white font-semibold">
+                    {getInitials(currentUser.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-gray-900 truncate">{currentUser.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
+                </div>
+              </div>
             </div>
           </div>
         </header>

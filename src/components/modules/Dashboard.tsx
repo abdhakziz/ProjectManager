@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import { 
   FolderKanban, 
   CheckSquare, 
@@ -14,42 +19,84 @@ import {
   Target,
   Zap,
   Award,
-  Activity
+  Activity,
+  Plus,
+  Sparkles
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { hasPermission } from '../utils/permissions';
+import { mockProjects } from '../../App';
 
 interface DashboardProps {
   currentUser: any;
+  onProjectCreated?: (project: any) => void;
 }
 
-export default function Dashboard({ currentUser }: DashboardProps) {
-  // Permission checks
-  const canViewAllStats = hasPermission(currentUser.role, 'view_all_stats');
-  const canViewTeamStats = hasPermission(currentUser.role, 'view_team_stats');
-  
-  // Stats berbeda per role
-  const [stats, setStats] = useState(canViewAllStats ? {
-    totalProjects: 48,
-    activeProjects: 24,
-    completedTasks: 456,
-    pendingTasks: 112,
-    teamMembers: 24,
-    hoursTracked: 2456
-  } : canViewTeamStats ? {
-    totalProjects: 12,
-    activeProjects: 7,
+export default function Dashboard({ currentUser, onProjectCreated }: DashboardProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    color: 'bg-blue-500',
+    objective: ''
+  });
+
+  const handleCreateProject = () => {
+    const newProject = {
+      id: Date.now().toString(),
+      name: formData.name,
+      description: formData.description,
+      status: 'active',
+      progress: 0,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      color: formData.color,
+      team: [
+        { 
+          userId: currentUser.userId, 
+          name: currentUser.name, 
+          email: currentUser.email, 
+          role: 'manager' 
+        }
+      ],
+      tasks: 0,
+      completedTasks: 0,
+      createdBy: currentUser.userId,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    // Here you would normally save to backend
+    console.log('New project created:', newProject);
+    
+    // Callback to parent if provided
+    if (onProjectCreated) {
+      onProjectCreated(newProject);
+    }
+
+    setIsCreateDialogOpen(false);
+    setFormData({ name: '', description: '', startDate: '', endDate: '', color: 'bg-blue-500', objective: '' });
+    alert(`Project "${newProject.name}" berhasil dibuat! Anda adalah Manager dari project ini.`);
+  };
+
+  const colorOptions = [
+    { value: 'bg-blue-500', label: 'Biru' },
+    { value: 'bg-purple-500', label: 'Ungu' },
+    { value: 'bg-green-500', label: 'Hijau' },
+    { value: 'bg-orange-500', label: 'Orange' },
+    { value: 'bg-teal-500', label: 'Teal' },
+    { value: 'bg-pink-500', label: 'Pink' },
+    { value: 'bg-red-500', label: 'Merah' },
+  ];
+
+  // Stats data - same for all users now since role is uniform
+  const [stats, setStats] = useState({
+    totalProjects: mockProjects.length,
+    activeProjects: mockProjects.filter(p => p.status === 'active').length,
     completedTasks: 145,
     pendingTasks: 38,
     teamMembers: 8,
     hoursTracked: 640
-  } : {
-    totalProjects: 3,
-    activeProjects: 2,
-    completedTasks: 28,
-    pendingTasks: 5,
-    teamMembers: 1,
-    hoursTracked: 186
   });
 
   const projectData = [
@@ -115,14 +162,123 @@ export default function Dashboard({ currentUser }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
+      {/* Welcome Section with Create Project Button */}
       <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap className="h-6 w-6 text-yellow-300" />
-            <span className="text-sm font-semibold text-blue-100">Dashboard Overview</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap className="h-6 w-6 text-yellow-300" />
+              <span className="text-sm font-semibold text-blue-100">Dashboard Overview</span>
+            </div>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Proyek Baru
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-blue-600" />
+                    Tambah Proyek Baru
+                  </DialogTitle>
+                  <DialogDescription>
+                    Buat proyek baru dan Anda akan otomatis menjadi Manager
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nama Proyek *</Label>
+                    <Input
+                      id="name"
+                      placeholder="Masukkan nama proyek"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Deskripsi</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Deskripsi singkat tentang proyek"
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="objective">Tujuan Proyek</Label>
+                    <Textarea
+                      id="objective"
+                      placeholder="Apa tujuan utama dari proyek ini?"
+                      rows={2}
+                      value={formData.objective}
+                      onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Tanggal Mulai *</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">Tanggal Selesai *</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Warna Proyek</Label>
+                    <div className="flex gap-3 flex-wrap">
+                      {colorOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, color: option.value })}
+                          className={`relative w-10 h-10 rounded-full ${option.value} border-2 transition-all ${
+                            formData.color === option.value 
+                              ? 'border-gray-900 scale-110 shadow-lg' 
+                              : 'border-gray-300 hover:scale-105'
+                          }`}
+                          title={option.label}
+                        >
+                          {formData.color === option.value && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <CheckSquare className="h-5 w-5 text-white drop-shadow" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Batal
+                  </Button>
+                  <Button 
+                    onClick={handleCreateProject}
+                    disabled={!formData.name || !formData.startDate || !formData.endDate}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Buat Proyek
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           <h2 className="text-3xl font-bold mb-2">Selamat Datang Kembali, {currentUser.name}!</h2>
           <p className="text-blue-100 text-lg">Berikut adalah ringkasan aktivitas proyek Anda hari ini.</p>

@@ -15,9 +15,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 interface TimeTrackingProps {
   currentUser: any;
+  selectedProject?: any;
 }
 
-export default function TimeTracking({ currentUser }: TimeTrackingProps) {
+export default function TimeTracking({ currentUser, selectedProject }: TimeTrackingProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentTask, setCurrentTask] = useState('');

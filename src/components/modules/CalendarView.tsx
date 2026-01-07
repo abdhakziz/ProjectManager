@@ -7,9 +7,10 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 
 interface CalendarViewProps {
   currentUser: any;
+  selectedProject?: any;
 }
 
-export default function CalendarView({ currentUser }: CalendarViewProps) {
+export default function CalendarView({ currentUser, selectedProject }: CalendarViewProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
 

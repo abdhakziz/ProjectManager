@@ -24,9 +24,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface TasksProps {
   currentUser: any;
+  selectedProject?: any;
 }
 
-export default function Tasks({ currentUser }: TasksProps) {
+export default function Tasks({ currentUser, selectedProject }: TasksProps) {
   const [tasks, setTasks] = useState([
     {
       id: 1,

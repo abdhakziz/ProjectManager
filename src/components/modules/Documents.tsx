@@ -22,9 +22,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface DocumentsProps {
   currentUser: any;
+  selectedProject?: any;
 }
 
-export default function Documents({ currentUser }: DocumentsProps) {
+export default function Documents({ currentUser, selectedProject }: DocumentsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [documents, setDocuments] = useState([
     {

@@ -15,9 +15,9 @@ export default function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const mockUsers = [
-    { id: 1, name: 'Admin User', email: 'admin@example.com', password: 'admin123', role: 'admin' },
-    { id: 2, name: 'Manager User', email: 'manager@example.com', password: 'manager123', role: 'manager' },
-    { id: 3, name: 'Team Member', email: 'member@example.com', password: 'member123', role: 'member' }
+    { id: 1, userId: 'user1', name: 'John Doe', email: 'user@example.com', password: 'user123', role: 'user' },
+    { id: 2, userId: 'user2', name: 'Jane Smith', email: 'jane@example.com', password: 'jane123', role: 'user' },
+    { id: 3, userId: 'user3', name: 'Mike Johnson', email: 'mike@example.com', password: 'mike123', role: 'user' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,16 +127,16 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
               <div className="space-y-2 text-xs text-gray-600">
                 <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                  <span className="font-medium">Admin</span>
-                  <span className="text-gray-500">admin@example.com / admin123</span>
+                  <span className="font-medium">John Doe</span>
+                  <span className="text-gray-500">user@example.com / user123</span>
                 </div>
                 <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                  <span className="font-medium">Manager</span>
-                  <span className="text-gray-500">manager@example.com / manager123</span>
+                  <span className="font-medium">Jane Smith</span>
+                  <span className="text-gray-500">jane@example.com / jane123</span>
                 </div>
                 <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                  <span className="font-medium">Member</span>
-                  <span className="text-gray-500">member@example.com / member123</span>
+                  <span className="font-medium">Mike Johnson</span>
+                  <span className="text-gray-500">mike@example.com / mike123</span>
                 </div>
               </div>
             </div>
